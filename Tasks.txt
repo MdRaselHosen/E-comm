@@ -2,5 +2,6 @@
 - User Registration - Done
 - User Login - Done
 
-- Product CRUD - Done
-- Oder CRUD - 
+- Product CRUD + Authentication - Done
+- Oder CRUD + Authentication - Done
+- Payment - 
