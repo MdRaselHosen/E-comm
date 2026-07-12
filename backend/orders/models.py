@@ -35,7 +35,7 @@ class OrderItem(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        self.product.name
+        return self.product.name
 
     
 
