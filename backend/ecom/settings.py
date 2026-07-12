@@ -16,9 +16,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 import os
+import environ
+
+env = environ.Env()
+# Read the .env file if it exists
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -159,5 +165,20 @@ SIMPLE_JWT = {
 }
 
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
-STRIPE_PUBLIC_KEY = "stripe_public_key"
-STRIPE_WEBHOOK_SECRET = "stripe_webhook_key"
+
+
+# STRIPE CONFIGURATION
+STRIPE_MODE = env.str("STRIPE_MODE", default="test")
+if STRIPE_MODE == "live":
+    STRIPE_SECRET_KEY = env.str("STRIPE_LIVE_SECRET_KEY")
+    STRIPE_WEBHOOK_SECRET = env.str("STRIPE_LIVE_WEBHOOK_SECRET")
+else:
+    STRIPE_SECRET_KEY = env.str("STRIPE_TEST_SECRET_KEY")
+    STRIPE_WEBHOOK_SECRET = env.str("STRIPE_TEST_WEBHOOK_SECRET")
+
+# BKASH CONFIGURATION
+BKASH_IS_SANDBOX = env.bool("BKASH_IS_SANDBOX", default=True)
+BKASH_APP_KEY = env.str("BKASH_APP_KEY")
+BKASH_APP_SECRET = env.str("BKASH_APP_SECRET")
+BKASH_USERNAME = env.str("BKASH_USERNAME")
+BKASH_PASSWORD = env.str("BKASH_PASSWORD")

@@ -1,7 +1,11 @@
+Backend
 
 - User Registration - Done
 - User Login - Done
 
 - Product CRUD + Authentication - Done
 - Oder CRUD + Authentication - Done
-- Payment - 
+- Payment - Stripe + Bkash - Done
+
+Frontend - React + bootstrap (minimal design to show the data and do operations)
+
