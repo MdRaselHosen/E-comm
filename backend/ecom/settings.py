@@ -76,9 +76,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-CORS_ALLOWED_ORIGINS = [
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[
     "http://localhost:5173",
-]
+    "https://e-comm-6hl7r7e16-mdraselhosens-projects.vercel.app",
+])
 
 ROOT_URLCONF = "ecom.urls"
 
