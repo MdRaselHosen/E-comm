@@ -38,7 +38,7 @@ DEBUG = False
 
 import os
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1", "e-comm-caf1.onrender.com"])
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", separator=' ', default=["localhost", "127.0.0.1", "e-comm-caf1.onrender.com"])
 
 
 # Application definition
