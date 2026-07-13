@@ -34,9 +34,9 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = "django-insecure-_rorm(sgp%t8_53pbmx81zgh)-9n0&t1jel6kmvf6(#9+x1o7*"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
 
 # Application definition
@@ -59,6 +59,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -94,16 +95,21 @@ WSGI_APPLICATION = "ecom.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": env.str("DB_NAME", default="ecomm"),
-        "USER": env.str("DB_USER", default="raselhosen"),
-        "PASSWORD": env.str("DB_PASSWORD", default="0000"),
-        "HOST": env.str("DB_HOST", default="localhost"),
-        "PORT": env.str("DB_PORT", default="5432"),
+if env.str("DATABASE_URL", default=""):
+    DATABASES = {
+        "default": env.db("DATABASE_URL")
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": env.str("DB_NAME", default="ecomm"),
+            "USER": env.str("DB_USER", default="raselhosen"),
+            "PASSWORD": env.str("DB_PASSWORD", default="0000"),
+            "HOST": env.str("DB_HOST", default="localhost"),
+            "PORT": env.str("DB_PORT", default="5432"),
+        }
+    }
 
 
 # Password validation
@@ -143,6 +149,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
