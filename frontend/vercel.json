@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://e-comm-caf1.onrender.com/:path*"
+      "destination": "https://e-comm-caf1.onrender.com/api/:path*"
     },
     {
       "source": "/((?!api/).*)",
