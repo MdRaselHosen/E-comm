@@ -7,9 +7,11 @@ from django.utils.decorators import method_decorator
 from .models import Payment
 from .payment_strategies import StripePaymentStrategy
 from orders.utils import reduce_order_stock  # Add your stock reduction helper path here
+from rest_framework.permissions import AllowAny
 
 @method_decorator(csrf_exempt, name="dispatch")
 class StripeWebhookView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         if not StripePaymentStrategy().validate_webhook(request.body, request.META.get("HTTP_STRIPE_SIGNATURE")):
             return Response({"detail": "Invalid signature."}, status=status.HTTP_400_BAD_REQUEST)
@@ -32,6 +34,7 @@ class StripeWebhookView(APIView):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class BkashWebhookView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         tx_id, code = request.data.get("paymentID"), request.data.get("statusCode")
         payment = Payment.objects.filter(transaction_id=tx_id).first()

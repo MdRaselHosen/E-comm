@@ -15,6 +15,7 @@ from .serializers import (
 )
 from .payment_strategies import PaymentStrategyFactory
 from orders.models import Order
+from orders.utils import reduce_order_stock
 
 
 class PaymentInitializeView(APIView):
@@ -44,7 +45,7 @@ class PaymentInitializeView(APIView):
         payment_result = strategy.create_payment(
             order_id=order.id,
             amount=serializer.validated_data["amount"],
-            currency=serializer.validated_data.get("currency", "USD"),
+            currency=serializer.validated_data.get("currency", "bdt"),
         )
 
         if not payment_result.get("success"):
@@ -53,7 +54,6 @@ class PaymentInitializeView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Store payment in database
         payment = Payment.objects.create(
             order=order,
             provider=provider,
@@ -68,7 +68,6 @@ class PaymentInitializeView(APIView):
             "status": payment_result["status"],
         }
 
-        # Add provider-specific fields
         if provider == "stripe":
             response_data["client_secret"] = payment_result.get("client_secret")
         elif provider == "bkash":
@@ -117,15 +116,14 @@ class PaymentConfirmView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Update payment status
         payment.status = confirm_result.get("status", "success")
         payment.raw_responses = confirm_result.get("raw_response")
         payment.save()
 
-        # Update order status to 'paid' if payment succeeded
-        if payment.status == "success":
+        if payment.status == "success" and payment.order.status != "paid":
             payment.order.status = "paid"
             payment.order.save()
+            reduce_order_stock(payment.order)
 
         return Response(
             {
@@ -166,7 +164,6 @@ class PaymentStatusView(APIView):
         status_result = strategy.query_payment_status(payment.transaction_id)
 
         if status_result.get("success"):
-            # Update payment status in database
             payment.status = status_result.get("status", payment.status)
             payment.raw_responses = status_result.get("raw_response")
             payment.save()
