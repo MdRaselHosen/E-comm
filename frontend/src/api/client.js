@@ -1,11 +1,8 @@
 import axios from 'axios'
 
-// Extract the base domain from env or default to empty string for relative routing
-const baseDomain = import.meta.env.VITE_API_URL || '';
-
 const api = axios.create({
-  // This guarantees that regardless of environment, /api is always attached
-  baseURL: `${baseDomain}/api`, 
+  // Looks for VITE_API_URL, falls back to relative path if not defined
+  baseURL: import.meta.env.VITE_API_URL || '/api', 
 })
 
 api.interceptors.request.use((config) => {
