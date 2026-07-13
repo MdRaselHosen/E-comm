@@ -38,14 +38,7 @@ DEBUG = False
 
 import os
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost 127.0.0.1").split(" ")
-
-# Option B: Hardcoding it directly for Render
-ALLOWED_HOSTS = [
-    'e-comm-caf1.onrender.com',
-    'localhost',
-    '127.0.0.1',
-]
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1", "e-comm-caf1.onrender.com"])
 
 
 # Application definition
