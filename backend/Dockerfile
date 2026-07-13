@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-
+    
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -18,6 +18,5 @@ COPY . /app/
 
 EXPOSE 8000
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-python manage.py migrate --noinput && gunicorn ecom.wsgi:application --bind 0.0.0.0:8000
-CMD ["gunicorn", "ecom.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Run database migrations first, then launch Gunicorn WSGI server
+CMD python manage.py migrate --noinput && gunicorn ecom.wsgi:application --bind 0.0.0.0:8000

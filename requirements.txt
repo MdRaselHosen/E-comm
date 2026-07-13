@@ -18,9 +18,5 @@ stripe==15.3.0
 typing==3.7.4.3
 typing_extensions==4.16.0
 urllib3==2.7.0
-Django>=4.2
-gunicorn
-dj-database-url
-psycopg2-binary
-whitenoise
-
+gunicorn==21.2.0
+whitenoise==6.6.0
