@@ -38,8 +38,6 @@ DEBUG = False
 
 import os
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1", "e-comm-caf1.onrender.com"])
-
 
 # Application definition
 
@@ -69,11 +67,11 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[
-    "http://localhost:5173",
-    "https://e-comm-6hl7r7e16-mdraselhosens-projects.vercel.app",
-])
-
+CORS_ALLOWED_ORIGINS = [
+    "https://e-comm-rust-gamma.vercel.app",
+    "http://localhost:5173", 
+    "http://127.0.0.1:5173",
+]
 ROOT_URLCONF = "ecom.urls"
 
 TEMPLATES = [
@@ -146,6 +144,10 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
+
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1", "e-comm-caf1.onrender.com"])
+
+
 
 
 # Static files (CSS, JavaScript, Images)
