@@ -1,66 +1,71 @@
 import { useState } from 'react'
+import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { paymentsApi } from '../api'
+import { useNavigate } from 'react-router-dom';
 
 export default function PaymentForm({ order, onPaymentComplete }) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const navigate = useNavigate()
+
   const [provider, setProvider] = useState('stripe')
-  const [paymentResult, setPaymentResult] = useState(null)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
-  const handleInitialize = async () => {
+  const handleSubmitPayment = async (e) => {
+    e.preventDefault()
     setError('')
     setMessage('')
+    setLoading(true)
+
     try {
       const { data } = await paymentsApi.initialize({
         order_id: order.id,
         provider,
         amount: order.total_amount,
-        currency: 'bdt',
+        currency: provider === 'bkash' ? 'BDT' : 'bdt',
       })
-      setPaymentResult(data)
-      setMessage('Payment initialized. Complete payment then confirm.')
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Payment initialization failed')
-    }
-  }
 
-  const handleConfirm = async () => {
-    if (!paymentResult?.transaction_id) return
-    setError('')
-    setMessage('')
-    try {
-      await paymentsApi.confirm({
-        transaction_id: paymentResult.transaction_id,
-        provider,
-      })
-      setMessage('Payment confirmed successfully!')
-      onPaymentComplete?.()
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Payment confirmation failed')
-    }
-  }
+      if (provider === 'stripe') {
+        if (!stripe || !elements) {
+          setError('Stripe has not loaded properly.')
+          setLoading(false)
+          return
+        }
 
-  const handleCheckStatus = async () => {
-    if (!paymentResult?.transaction_id) return
-    setError('')
-    try {
-      const { data } = await paymentsApi.status({
-        transaction_id: paymentResult.transaction_id,
-        provider,
-      })
-      setMessage(`Payment status: ${data.status}`)
-      onPaymentComplete?.()
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to check status')
-    }
-  }
+        const cardElement = elements.getElement(CardElement)
+        const stripeResult = await stripe.confirmCardPayment(data.client_secret, {
+          payment_method: {
+            card: cardElement,
+          },
+        })
 
-  if (order.status !== 'pending') {
-    return (
-      <div className="alert alert-success mb-0">
-        This order has been paid. Status: <strong>{order.status}</strong>
-      </div>
-    )
+        if (stripeResult.error) {
+          setError(stripeResult.error.message)
+          setLoading(false)
+          return
+        }
+
+        if (stripeResult.paymentIntent.status === 'succeeded' || stripeResult.paymentIntent.status === 'processing') {
+          await paymentsApi.confirm({
+            transaction_id: stripeResult.paymentIntent.id,
+            provider,
+          })
+          setMessage('Payment confirmed successfully!')
+          onPaymentComplete?.()
+          navigate('/');
+        }
+      } else if (provider === 'bkash') {
+        if (data.checkout_url) {
+          window.location.href = data.checkout_url
+        }
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Payment processing failed.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -68,50 +73,31 @@ export default function PaymentForm({ order, onPaymentComplete }) {
       {error && <div className="alert alert-danger">{error}</div>}
       {message && <div className="alert alert-success">{message}</div>}
 
-      <div className="mb-3">
-        <label className="form-label">Payment Provider</label>
-        <select
-          className="form-select"
-          value={provider}
-          onChange={(e) => setProvider(e.target.value)}
-        >
-          <option value="stripe">Stripe</option>
-          <option value="bkash">bKash</option>
-        </select>
-      </div>
-
-      <div className="d-flex flex-wrap gap-2 mb-3">
-        <button className="btn btn-primary" onClick={handleInitialize}>
-          Initialize Payment
-        </button>
-        {paymentResult && (
-          <>
-            <button className="btn btn-success" onClick={handleConfirm}>
-              Confirm Payment
-            </button>
-            <button className="btn btn-outline-secondary" onClick={handleCheckStatus}>
-              Check Status
-            </button>
-          </>
-        )}
-      </div>
-
-      {paymentResult && (
-        <div className="bg-light p-3 rounded">
-          <p className="mb-1"><strong>Transaction ID:</strong> {paymentResult.transaction_id}</p>
-          {paymentResult.client_secret && (
-            <p className="mb-1"><strong>Client Secret:</strong> {paymentResult.client_secret}</p>
-          )}
-          {paymentResult.checkout_url && (
-            <p className="mb-0">
-              <strong>Checkout URL:</strong>{' '}
-              <a href={paymentResult.checkout_url} target="_blank" rel="noreferrer">
-                Open bKash Checkout
-              </a>
-            </p>
-          )}
+      <form onSubmit={handleSubmitPayment}>
+        <div className="mb-3">
+          <label className="form-label">Payment Provider</label>
+          <select
+            className="form-select"
+            value={provider}
+            onChange={(e) => setProvider(e.target.value)}
+            disabled={loading}
+          >
+            <option value="stripe">Stripe</option>
+            <option value="bkash">bKash</option>
+          </select>
         </div>
-      )}
+
+        {provider === 'stripe' && (
+          <div className="mb-4 p-3 border rounded bg-white">
+            <label className="form-label">Credit or Debit Card</label>
+            <CardElement options={{ style: { base: { fontSize: '16px' } } }} />
+          </div>
+        )}
+
+        <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+          {loading ? 'Processing...' : `Pay $${order.total_amount} via ${provider === 'stripe' ? 'Stripe' : 'bKash'}`}
+        </button>
+      </form>
     </div>
   )
 }

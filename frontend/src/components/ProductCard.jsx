@@ -16,7 +16,7 @@ export default function ProductCard({ product }) {
         </p>
         <p className="text-muted small mb-1">SKU: {product.sku}</p>
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <span className="h5 mb-0 text-primary">Tk {product.price}</span>
+          <span className="h5 mb-0 text-primary">${product.price}</span>
           <span className={`badge ${inStock ? 'bg-success' : 'bg-secondary'}`}>
             {inStock ? `in stock` : 'Out of stock'}
           </span>

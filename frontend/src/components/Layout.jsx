@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 
 export default function Layout() {
-  const { user, logout, isAuthenticated } = useAuth()
+  const { user, logout, isAuthenticated, isStaff, isSuperuser } = useAuth()
   const { cartCount } = useCart()
   const navigate = useNavigate()
 
@@ -30,9 +30,19 @@ export default function Layout() {
               <li className="nav-item">
                 <Link className="nav-link" to="/">Shop</Link>
               </li>
-              {isAuthenticated && (
+              {isAuthenticated && !isStaff && (
                 <li className="nav-item">
                   <Link className="nav-link" to="/orders">My Orders</Link>
+                </li>
+              )}
+              {isAuthenticated && isStaff && (
+                <li className="nav-item">
+                  <Link className="nav-link" to="/admin/orders">All Orders</Link>
+                </li>
+              )}
+              {isAuthenticated && isSuperuser && (
+                <li className="nav-item">
+                  <Link className="nav-link" to="/admin/products">Manage Products</Link>
                 </li>
               )}
             </ul>

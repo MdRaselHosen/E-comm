@@ -1,8 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements } from '@stripe/react-stripe-js'
 import { ordersApi } from '../api'
 import { useCart } from '../context/CartContext'
 import PaymentForm from '../components/PaymentForm'
+
+const stripePromise = loadStripe("pk_test_51TrmMcLADXjQhmcblv9Rq28klbW9mTCzPmnH8VKYNY32XhK5407R07R4sHpvVmb8ZT8Cv8bbGsRBph4K2dBpnvoI00xTg2EuqQ");
 
 export default function CheckoutPage() {
   const { items, cartTotal, clearCart } = useCart()
@@ -36,11 +40,6 @@ export default function CheckoutPage() {
     }
   }
 
-  const reloadOrder = async () => {
-    if (!order) return
-    const { data } = await ordersApi.get(order.id)
-    setOrder(data)
-  }
 
   if (order) {
     return (
@@ -52,19 +51,22 @@ export default function CheckoutPage() {
         <div className="row">
           <div className="col-lg-7">
             <div className="card mb-4">
-              <div className="card-header">Payment</div>
+              <div className="card-header font-weight-bold">Payment Details</div>
               <div className="card-body">
-                <PaymentForm order={order} onPaymentComplete={reloadOrder} />
+                
+                <Elements stripe={stripePromise}>
+                  <PaymentForm order={order} onPaymentComplete={() => navigate('/')} />
+                </Elements>
               </div>
             </div>
           </div>
           <div className="col-lg-5">
             <div className="card">
-              <div className="card-header">Order #{order.id}</div>
+              <div className="card-header">Order Summary ( #{order.id} )</div>
               <div className="card-body">
                 <table className="table table-sm">
                   <tbody>
-                    {order.items.map((item) => (
+                    {order.items?.map((item) => (
                       <tr key={item.id}>
                         <td>{item.product} x {item.quantity}</td>
                         <td className="text-end">${item.sub_total}</td>

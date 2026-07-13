@@ -1,16 +1,31 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
+import { useAuth } from './AuthContext'
 
 const CartContext = createContext(null)
 const CART_KEY = 'cart'
 
 export function CartProvider({ children }) {
+  const { isAuthenticated } = useAuth()
+  const wasAuthenticated = useRef(isAuthenticated)
   const [items, setItems] = useState(() => {
     const saved = localStorage.getItem(CART_KEY)
     return saved ? JSON.parse(saved) : []
   })
 
   useEffect(() => {
-    localStorage.setItem(CART_KEY, JSON.stringify(items))
+    if (wasAuthenticated.current && !isAuthenticated) {
+      setItems([])
+      localStorage.removeItem(CART_KEY)
+    }
+    wasAuthenticated.current = isAuthenticated
+  }, [isAuthenticated])
+
+  useEffect(() => {
+    if (items.length > 0) {
+      localStorage.setItem(CART_KEY, JSON.stringify(items))
+    } else {
+      localStorage.removeItem(CART_KEY)
+    }
   }, [items])
 
   const addToCart = (product) => {
@@ -52,7 +67,10 @@ export function CartProvider({ children }) {
     )
   }
 
-  const clearCart = () => setItems([])
+  const clearCart = () => {
+    setItems([])
+    localStorage.removeItem(CART_KEY)
+  }
 
   const cartCount = items.reduce((sum, i) => sum + i.quantity, 0)
   const cartTotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)

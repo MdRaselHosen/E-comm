@@ -1,24 +1,31 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { ordersApi } from '../api'
-import PaymentForm from '../components/PaymentForm'
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { ordersApi } from "../api";
+import PaymentForm from "../components/PaymentForm";
+import { useAuth } from "../context/AuthContext";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+
+const stripePromise = loadStripe("pk_test_51TrmMcLADXjQhmcblv9Rq28klbW9mTCzPmnH8VKYNY32XhK5407R07R4sHpvVmb8ZT8Cv8bbGsRBph4K2dBpnvoI00xTg2EuqQ");
 
 export default function OrderDetailPage() {
-  const { id } = useParams()
-  const [order, setOrder] = useState(null)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(true)
+  const { id } = useParams();
+  const { isStaff } = useAuth();
+  const [order, setOrder] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const loadOrder = () => {
-    ordersApi.get(id)
+    ordersApi
+      .get(id)
       .then(({ data }) => setOrder(data))
-      .catch(() => setError('Failed to load order'))
-      .finally(() => setLoading(false))
-  }
+      .catch(() => setError("Failed to load order"))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    loadOrder()
-  }, [id])
+    loadOrder();
+  }, [id]);
 
   if (loading) {
     return (
@@ -27,14 +34,16 @@ export default function OrderDetailPage() {
           <span className="visually-hidden">Loading...</span>
         </div>
       </div>
-    )
+    );
   }
 
-  if (!order) return <p>Order not found.</p>
+  if (!order) return <p>Order not found.</p>;
 
   return (
     <div>
-      <Link to="/orders" className="btn btn-link ps-0">&larr; Back to Orders</Link>
+      <Link to={isStaff ? "/admin/orders" : "/orders"} className="btn btn-link ps-0">
+        &larr; Back to Orders
+      </Link>
       <h2 className="mb-4">Order #{order.id}</h2>
 
       {error && <div className="alert alert-danger">{error}</div>}
@@ -73,11 +82,13 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          {order.status === 'pending' && (
+          {order.status === "pending" && !isStaff && (
             <div className="card">
               <div className="card-header">Payment</div>
               <div className="card-body">
-                <PaymentForm order={order} onPaymentComplete={loadOrder} />
+                <Elements stripe={stripePromise}>
+                  <PaymentForm order={order} onPaymentComplete={loadOrder} />
+                </Elements>
               </div>
             </div>
           )}
@@ -87,17 +98,30 @@ export default function OrderDetailPage() {
           <div className="card">
             <div className="card-header">Order Info</div>
             <div className="card-body">
-              <p><strong>Status:</strong>{' '}
-                <span className={`badge ${order.status === 'paid' ? 'bg-success' : 'bg-warning text-dark'}`}>
+              {isStaff && (
+                <p>
+                  <strong>User ID:</strong> {order.user}
+                </p>
+              )}
+              <p>
+                <strong>Status:</strong>{" "}
+                <span
+                  className={`badge ${order.status === "paid" ? "bg-success" : "bg-warning text-dark"}`}
+                >
                   {order.status}
                 </span>
               </p>
-              <p><strong>Total:</strong> ${order.total_amount}</p>
-              <p className="mb-0"><strong>Date:</strong> {new Date(order.created_at).toLocaleString()}</p>
+              <p>
+                <strong>Total:</strong> ${order.total_amount}
+              </p>
+              <p className="mb-0">
+                <strong>Date:</strong>{" "}
+                {new Date(order.created_at).toLocaleString()}
+              </p>
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

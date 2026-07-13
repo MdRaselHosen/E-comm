@@ -34,10 +34,22 @@ export function AuthProvider({ children }) {
     setUser(null)
     localStorage.removeItem('access_token')
     localStorage.removeItem('user')
+    localStorage.removeItem('cart')
   }
 
+  const isStaff = !!user?.is_staff
+  const isSuperuser = !!user?.is_superuser
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{
+      user,
+      login,
+      register,
+      logout,
+      isAuthenticated: !!user,
+      isStaff,
+      isSuperuser,
+    }}>
       {children}
     </AuthContext.Provider>
   )
